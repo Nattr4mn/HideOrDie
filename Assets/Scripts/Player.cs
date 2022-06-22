@@ -14,5 +14,20 @@ public class Player : MonoBehaviour
         }
     }
 
-    
+    private void FixedUpdate()
+    {
+        var verticalAxis = Input.GetAxis("Vertical");
+        var horizontalAxis = Input.GetAxis("Horizontal");
+        Vector2 velocityVector = Vector2.zero;
+        if (verticalAxis != 0 || horizontalAxis != 0)
+        {
+            velocityVector = new Vector2(horizontalAxis * _playerMoveSpeed, verticalAxis * _playerMoveSpeed);
+        }
+        _playerRigidbody.velocity = velocityVector;
+    }
+
+    public void SetPosition(Vector2Int position)
+    {
+        transform.position = new Vector3(position.y, position.x, transform.position.z);
+    }
 }

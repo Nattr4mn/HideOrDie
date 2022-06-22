@@ -1,14 +1,18 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Tilemaps;
 
 public class MapBuilder : MonoBehaviour
 {
+    [SerializeField] private UnityEvent<Vector2Int> _mapBuildComplete;
     [SerializeField] private Tilemap _floorTilemap;
     [SerializeField] private Tilemap _wallsTilemap;
     [SerializeField] private TileBase _wallTile;
     [SerializeField] private TileBase _floorTile;
     [SerializeField] private int _mapSize;
     private MapGenerator _map;
+
+    public MapGenerator Map => _map;
 
     private void Awake()
     {
@@ -21,8 +25,7 @@ public class MapBuilder : MonoBehaviour
         _wallsTilemap.ClearAllTiles();
         _map = new MapGenerator(_mapSize);
         _map.GenerateMap();
-        _map.GenerateMap();
-        var mapGraph = _map.Map;
+        var mapGraph = _map.Scheme;
         for (int x = 0; x < _mapSize + 2; x++)
         {
             for (int y = 0; y < _mapSize + 2; y++)
@@ -31,13 +34,14 @@ public class MapBuilder : MonoBehaviour
                 SetTile(mapGraph, tilePosition);
             }
         }
+        _mapBuildComplete?.Invoke(_map.StartPosition);
     }
 
     private void SetTile(int[,] mapGraph, Vector3Int tilePosition)
     {
         if (mapGraph[tilePosition.y, tilePosition.x] == MapGenerator.WallMark)
         {
-            _floorTilemap.SetTile(tilePosition, _wallTile);
+            _wallsTilemap.SetTile(tilePosition, _wallTile);
         }
         else if (mapGraph[tilePosition.y, tilePosition.x] == MapGenerator.FloorMark)
         {

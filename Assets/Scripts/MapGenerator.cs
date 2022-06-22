@@ -10,12 +10,14 @@ public class MapGenerator
     private int[,] _map;
     private int _mapWidth;
     private int _mapHeight;
-    private Vector2 _startPosition;
-    private Vector2 _endPosition;
+    private Vector2Int _startPosition;
+    private Vector2Int _endPosition;
 
-    public int[,] Map => _map;
-    public Vector2 StartPosition => _startPosition;
-    public Vector2 EndPosition => _endPosition;
+    public int[,] Scheme => _map;
+    public Vector2Int StartPosition => _startPosition;
+    public Vector2Int EndPosition => _endPosition;
+    public int Width => _mapWidth;
+    public int Height => _mapHeight;
 
     public MapGenerator(int mapSize):
         this(mapSize, mapSize)
@@ -27,8 +29,14 @@ public class MapGenerator
         _mapWidth = mapWidth + 2;
         _mapHeight = mapHeight + 2;
         _map = new int[_mapWidth, _mapHeight];
+    }
+    public void GenerateMap()
+    {
         SetWalls();
         GenerateSpawnPoint();
+        Generate(new Vector2Int(1, 1));
+        Generate(new Vector2Int(_mapWidth - 1, _mapHeight - 1));
+        ParityCheck(_mapWidth - 2, _mapHeight - 2);
     }
 
     private void SetWalls()
@@ -45,12 +53,28 @@ public class MapGenerator
         }
     }
 
-    public void GenerateMap()
+    private void GenerateSpawnPoint()
     {
-        List<Vector2> unvisitedCells = GetUnvisitedCells();
-        Stack<Vector2> visitedCells = new Stack<Vector2>();
-        Vector2 startCell = new Vector2(1f, 1f);
-        Vector2 currentCell = startCell;
+        int[] xBorderPositions = new int[2] { 0, _mapWidth - 1 };
+        int xPosition = xBorderPositions[Random.Range(0, 1)];
+        int[] yBorderPositions = new int[2] { 1, _mapHeight - 2 };
+        int yPosition = yBorderPositions[Random.Range(0, 1)];
+
+        _startPosition = new Vector2Int(xPosition, yPosition);
+        _map[xPosition, yPosition] = FloorMark;
+
+        xPosition = xBorderPositions.First(position => position != xPosition);
+        yPosition = yBorderPositions.First(position => position != yPosition);
+
+        _endPosition = new Vector2Int(xPosition, yPosition);
+        _map[xPosition, yPosition] = FloorMark;
+    }
+
+    private void Generate(Vector2Int startPosition)
+    {
+        List<Vector2Int> unvisitedCells = GetUnvisitedCells();
+        Stack<Vector2Int> visitedCells = new Stack<Vector2Int>();
+        Vector2Int currentCell = startPosition;
         visitedCells.Push(currentCell);
         unvisitedCells.Remove(currentCell);
 
@@ -60,7 +84,7 @@ public class MapGenerator
             if(neighbourCells.Count > 0)
             {
                 var neighbourCellIndex = Random.Range(0, neighbourCells.Count);
-                Vector2 neighbourCell = neighbourCells[neighbourCellIndex];
+                Vector2Int neighbourCell = neighbourCells[neighbourCellIndex];
                 RemoveWall(currentCell, neighbourCell);
                 currentCell = neighbourCell;
                 visitedCells.Push(currentCell);
@@ -80,29 +104,29 @@ public class MapGenerator
         }
     }
 
-    private List<Vector2> GetUnvisitedCells()
+    private List<Vector2Int> GetUnvisitedCells()
     {
-        List<Vector2> unvisitedCells = new List<Vector2>();
+        List<Vector2Int> unvisitedCells = new List<Vector2Int>();
         for (int y = 1; y < _mapHeight - 1; y++)
         {
             for (int x = 1; x < _mapWidth - 1; x += 2)
             {
                 if (_map[y, x] == FloorMark)
                 {
-                    unvisitedCells.Add(new Vector2(x, y));
+                    unvisitedCells.Add(new Vector2Int(x, y));
                 }
             }
         }
         return unvisitedCells;
     }
 
-    private List<Vector2> GetNeighbourCells(List<Vector2> unvisitedCells, Vector2 startPoint)
+    private List<Vector2Int> GetNeighbourCells(List<Vector2Int> unvisitedCells, Vector2Int startPoint)
     {
-        List<Vector2> neighbourCells = new List<Vector2>();
-        var up = new Vector2(startPoint.x, startPoint.y - 2);
-        var down = new Vector2(startPoint.x, startPoint.y + 2);
-        var left = new Vector2(startPoint.x - 2, startPoint.y);
-        var right = new Vector2(startPoint.x + 2, startPoint.y);
+        List<Vector2Int> neighbourCells = new List<Vector2Int>();
+        var up = new Vector2Int(startPoint.x, startPoint.y - 2);
+        var down = new Vector2Int(startPoint.x, startPoint.y + 2);
+        var left = new Vector2Int(startPoint.x - 2, startPoint.y);
+        var right = new Vector2Int(startPoint.x + 2, startPoint.y);
 
         if (up.y > 0 && unvisitedCells.Contains(up)) neighbourCells.Add(up);
         if (down.y < _mapHeight - 1 && unvisitedCells.Contains(down)) neighbourCells.Add(down);
@@ -112,32 +136,34 @@ public class MapGenerator
         return neighbourCells;
     }
 
-    private void RemoveWall(Vector2 startCell, Vector2 endCell)
+    private void RemoveWall(Vector2Int startCell, Vector2Int endCell)
     {
         var xDifference = endCell.x - startCell.x;
         var yDifference = endCell.y - startCell.y;
-        Vector2 target;
+        Vector2Int target;
         var targetX = (xDifference != 0) ? (xDifference / Mathf.Abs(xDifference)) : 0;
         var targetY = (yDifference != 0) ? (yDifference / Mathf.Abs(yDifference)) : 0;
 
-        target = new Vector2(startCell.x + targetX, startCell.y + targetY);
-        _map[(int)target.y, (int)target.x] = FloorMark;
+        target = new Vector2Int(startCell.x + targetX, startCell.y + targetY);
+        _map[target.y, target.x] = FloorMark;
     }
 
-    private void GenerateSpawnPoint()
+    private void ParityCheck(int mapWidth, int mapHeight)
     {
-        int[] xBorderPositions = new int[2] { 0, _mapWidth - 1 };
-        int xPosition = xBorderPositions[Random.Range(0, 1)];
-        int[] yBorderPositions = new int[2] { 1, _mapHeight - 2 };
-        int yPosition = yBorderPositions[Random.Range(0, 1)];
+        if (mapWidth % 2 == 0)
+        {
+            for (int y = 1; y < mapHeight; y++)
+            {
+                _map[y, mapWidth] = FloorMark;
+            }
+        }
 
-        _startPosition = new Vector2(xPosition, yPosition);
-        _map[xPosition, yPosition] = FloorMark;
-
-        xPosition = xBorderPositions.First(position => position != xPosition);
-        yPosition = yBorderPositions.First(position => position != yPosition);
-
-        _endPosition = new Vector2(xPosition, yPosition);
-        _map[xPosition, yPosition] = FloorMark;
+        if (mapHeight % 2 == 0)
+        {
+            for (int x = 1; x <= mapWidth; x++)
+            {
+                _map[mapHeight, x] = FloorMark;
+            }
+        }
     }
 }
