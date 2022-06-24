@@ -52,4 +52,12 @@ public class Enemy : MonoBehaviour
         _enemyState = new EnemySearchState(_pathSearcher, target);
         _enemySpriteRenderer.color = _aggressiveColor;
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.TryGetComponent(out Player player))
+        {
+            player.Kill();
+        }
+    }
 }

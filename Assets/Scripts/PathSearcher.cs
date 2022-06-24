@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class PathSearcher
@@ -10,17 +12,44 @@ public class PathSearcher
         _map = map;
     }
 
+    public Vector2 GetNextPosition(Vector2 startPoint, Vector2 endPoint)
+    {
+        Vector2 startVector = CorrectionPosition(startPoint);
+        var newPaths = CreatePath(startPoint, endPoint);
+        return newPaths.First(path => path != startVector);
+    }
+
+    public List<Vector2> CreatePath(Vector2 startPoint, Vector2 endPoint)
+    {
+        Vector2 startVector = CorrectionPosition(startPoint);
+        Vector2 targetVector = CorrectionPosition(endPoint);
+        return SearchWay(startVector, targetVector);
+    }
+
+    private Vector2 CorrectionPosition(Vector2 position)
+    {
+        float startVectorX = (float)Math.Round(position.x);
+        float startVectorY = (float)Math.Round(position.y);
+        return new Vector2(startVectorX, startVectorY);
+    }
+
     public List<Vector2> SearchWay(Vector2 startPosition, Vector2 endPosition)
+    {
+        var cameFrom = SearchEndPosition(startPosition);
+        return BuildingPathToGoal(cameFrom, startPosition, endPosition);
+    }
+
+    private Dictionary<Vector2, Vector2> SearchEndPosition(Vector2 startPosition)
     {
         Queue<Vector2> frontier = new Queue<Vector2>();
         frontier.Enqueue(startPosition);
         Dictionary<Vector2, Vector2> cameFrom = new Dictionary<Vector2, Vector2>();
         Vector2 current;
-        while(frontier.Count > 0)
+        while (frontier.Count > 0)
         {
             current = frontier.Dequeue();
             var neighbourPositions = GetNeighbourCells(current);
-            foreach(var next in neighbourPositions)
+            foreach (var next in neighbourPositions)
             {
                 var nextX = (int)next.x;
                 var nextY = (int)next.y;
@@ -32,16 +61,20 @@ public class PathSearcher
             }
         }
 
-        current = endPosition;
+        return cameFrom;
+    }
+
+    private List<Vector2> BuildingPathToGoal(Dictionary<Vector2, Vector2> cameFrom, Vector2 startPosition, Vector2 endPosition)
+    {
+        Vector2 current = endPosition;
         List<Vector2> path = new List<Vector2>() { current };
-        while(current != startPosition)
+        while (current != startPosition)
         {
             current = cameFrom[current];
             path.Add(current);
         }
         path.Add(startPosition);
         path.Reverse();
-
         return path;
     }
 

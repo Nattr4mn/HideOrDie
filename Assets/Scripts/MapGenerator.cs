@@ -10,12 +10,12 @@ public class MapGenerator
     private int[,] _map;
     private int _mapWidth;
     private int _mapHeight;
-    private Vector2 _startPosition;
-    private Vector2 _endPosition;
+    private Vector2 _entryPosition;
+    private Vector2 _exitPosition;
 
     public int[,] Scheme => _map;
-    public Vector2 StartPosition => _startPosition;
-    public Vector2 EndPosition => _endPosition;
+    public Vector2 EntryPosition => _entryPosition;
+    public Vector2 ExitPosition => _exitPosition;
     public int Width => _mapWidth;
     public int Height => _mapHeight;
 
@@ -30,13 +30,14 @@ public class MapGenerator
         _mapHeight = mapHeight + 2;
         _map = new int[_mapWidth, _mapHeight];
     }
-    public void GenerateMap()
+    public int[,] GenerateMap()
     {
         SetWalls();
         GenerateSpawnPoint();
         Generate(new Vector2Int(1, 1));
         Generate(new Vector2Int(_mapWidth - 1, _mapHeight - 1));
         ParityCheck(_mapWidth - 2, _mapHeight - 2);
+        return _map;
     }
 
     private void SetWalls()
@@ -55,19 +56,36 @@ public class MapGenerator
 
     private void GenerateSpawnPoint()
     {
-        int[] xBorderPositions = new int[2] { 0, _mapWidth - 1 };
-        int xPosition = xBorderPositions[Random.Range(0, 1)];
-        int[] yBorderPositions = new int[2] { 1, _mapHeight - 2 };
-        int yPosition = yBorderPositions[Random.Range(0, 1)];
+        int xPosition = Random.Range(0, _mapWidth - 1);
+        var yPositions = new int[2] {0, _mapHeight - 1};
+        int yPosition = (xPosition == 0 || xPosition == _mapWidth - 1) ? Random.Range(1, _mapHeight - 2) : yPositions[Random.Range(0, 2)];
 
-        _startPosition = new Vector2Int(xPosition, yPosition);
-        _map[xPosition, yPosition] = FloorMark;
+        _entryPosition = new Vector2Int(xPosition, yPosition);
+        _map[yPosition, xPosition] = FloorMark;
 
-        xPosition = xBorderPositions.First(position => position != xPosition);
-        yPosition = yBorderPositions.First(position => position != yPosition);
+        if (xPosition == 0)
+        {
+            xPosition = _mapWidth - 1;
+            yPosition = Random.Range(1, _mapHeight - 2);
+        }
+        else if(xPosition == _mapWidth - 1)
+        {
+            xPosition = 0;
+            yPosition = Random.Range(1, _mapHeight - 2);
+        }
+        else if(yPosition == 0)
+        {
+            xPosition = Random.Range(1, _mapWidth - 2);
+            yPosition = _mapHeight - 1;
+        }
+        else if(yPosition == _mapHeight - 1)
+        {
+            xPosition = Random.Range(1, _mapWidth - 2);
+            yPosition = 0;
+        }
 
-        _endPosition = new Vector2Int(xPosition, yPosition);
-        _map[xPosition, yPosition] = FloorMark;
+        _exitPosition = new Vector2Int(xPosition, yPosition);
+        _map[yPosition, xPosition] = FloorMark;
     }
 
     private void Generate(Vector2Int startPosition)

@@ -14,8 +14,8 @@ public class EnemySearchState : EnemyState
     {
         if (currentPosition.position == _nextPosition || _nextPosition == Vector3.zero)
         {
-            var path = CreatePath(currentPosition.position, _targetTransform.position);
-            _nextPosition = new Vector3(path[2].x, path[2].y);
+            var path = PathSearcher.GetNextPosition(currentPosition.position, _targetTransform.position);
+            _nextPosition = new Vector3(path.x, path.y);
         }
         return _nextPosition;
     }

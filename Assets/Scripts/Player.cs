@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class Player : MonoBehaviour
 {
+    public UnityEvent KillEvent;
     [SerializeField] private Rigidbody2D _playerRigidbody;
     [SerializeField] private float _playerMoveSpeed;
 
@@ -26,8 +28,13 @@ public class Player : MonoBehaviour
         _playerRigidbody.velocity = velocityVector;
     }
 
-    public void SetPosition(Vector2Int position)
+    public void SetPosition(Vector3 position)
     {
-        transform.position = new Vector3(position.y, position.x, transform.position.z);
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
+    }
+
+    public void Kill()
+    {
+        KillEvent?.Invoke();
     }
 }

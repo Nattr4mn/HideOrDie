@@ -37,7 +37,7 @@ public class EnemyVision : MonoBehaviour
         for (int i = 0; i <= _rayVisionCount; i++)
         {
             Vector3 vertex;
-            RaycastHit2D detectionHit = Physics2D.Raycast(_origin, GetVectorFromAngle(currentAngle), _viewDistance, _visionLayerMask);
+            RaycastHit2D detectionHit = Physics2D.Raycast(_origin, _origin + GetVectorFromAngle(currentAngle), _viewDistance, _visionLayerMask);
             if (detectionHit.collider == null)
             {
                 vertex = _origin + GetVectorFromAngle(currentAngle) * _viewDistance;
@@ -85,13 +85,13 @@ public class EnemyVision : MonoBehaviour
 
     private Vector3 GetVectorFromAngle(float angle)
     {
-        float angleRad = angle * (Mathf.Rad2Deg / _rayVisionCount);
+        float angleRad = angle * (Mathf.PI / 180f);
         return new Vector3(Mathf.Sin(angleRad), Mathf.Cos(angleRad));
     }
 
     private void OnDrawGizmos()
     {
-       Gizmos.DrawRay(_origin, transform.up); 
+       Gizmos.DrawRay(_origin, transform.up);
     }
 
     private float GetAngleFromVectorFloat(Vector3 dir)
