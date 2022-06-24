@@ -3,7 +3,9 @@ using UnityEngine.Events;
 
 public class NoiseSensor : MonoBehaviour
 {
-    [SerializeField] private UnityEvent<float> _detectionEvent;
+    public UnityEvent<float> NoiseEvent;
+    public UnityEvent<Transform> DetectionEvent;
+
     [SerializeField] private Rigidbody2D _rigidbodyNoiseSource;
     [SerializeField] private float _maxNoiseLevel;
     private float _noise;
@@ -21,8 +23,9 @@ public class NoiseSensor : MonoBehaviour
                 if (_noise >= _maxNoiseLevel)
                 {
                     _noise = Mathf.Clamp(_noise, 0f, _maxNoiseLevel);
+                    DetectionEvent?.Invoke(_rigidbodyNoiseSource.transform);
                 }
-                _detectionEvent?.Invoke(_noise / _maxNoiseLevel);
+                NoiseEvent?.Invoke(_noise / _maxNoiseLevel);
             }
 
         }
@@ -33,7 +36,7 @@ public class NoiseSensor : MonoBehaviour
             {
                 _noiseTimer = 0f;
                 _noise -= 1;
-                _detectionEvent?.Invoke(_noise / _maxNoiseLevel);
+                NoiseEvent?.Invoke(_noise / _maxNoiseLevel);
             }
         }
     }

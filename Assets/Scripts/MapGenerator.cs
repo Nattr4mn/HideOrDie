@@ -10,12 +10,12 @@ public class MapGenerator
     private int[,] _map;
     private int _mapWidth;
     private int _mapHeight;
-    private Vector2Int _startPosition;
-    private Vector2Int _endPosition;
+    private Vector2 _startPosition;
+    private Vector2 _endPosition;
 
     public int[,] Scheme => _map;
-    public Vector2Int StartPosition => _startPosition;
-    public Vector2Int EndPosition => _endPosition;
+    public Vector2 StartPosition => _startPosition;
+    public Vector2 EndPosition => _endPosition;
     public int Width => _mapWidth;
     public int Height => _mapHeight;
 
@@ -72,7 +72,7 @@ public class MapGenerator
 
     private void Generate(Vector2Int startPosition)
     {
-        List<Vector2Int> unvisitedCells = GetUnvisitedCells();
+        List<Vector2Int> unvisitedCells = GetFloorPositions();
         Stack<Vector2Int> visitedCells = new Stack<Vector2Int>();
         Vector2Int currentCell = startPosition;
         visitedCells.Push(currentCell);
@@ -103,13 +103,13 @@ public class MapGenerator
             }
         }
     }
-
-    private List<Vector2Int> GetUnvisitedCells()
+    
+    public List<Vector2Int> GetFloorPositions()
     {
         List<Vector2Int> unvisitedCells = new List<Vector2Int>();
         for (int y = 1; y < _mapHeight - 1; y++)
         {
-            for (int x = 1; x < _mapWidth - 1; x += 2)
+            for (int x = 1; x < _mapWidth - 1; x++)
             {
                 if (_map[y, x] == FloorMark)
                 {

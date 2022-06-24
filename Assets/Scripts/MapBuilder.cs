@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Tilemaps;
 
 public class MapBuilder : MonoBehaviour
 {
-    [SerializeField] private UnityEvent<Vector2Int> _mapBuildComplete;
+    [SerializeField] private UnityEvent _mapBuildComplete;
     [SerializeField] private Tilemap _floorTilemap;
     [SerializeField] private Tilemap _wallsTilemap;
     [SerializeField] private TileBase _wallTile;
@@ -34,7 +35,7 @@ public class MapBuilder : MonoBehaviour
                 SetTile(mapGraph, tilePosition);
             }
         }
-        _mapBuildComplete?.Invoke(_map.StartPosition);
+        _mapBuildComplete?.Invoke();
     }
 
     private void SetTile(int[,] mapGraph, Vector3Int tilePosition)
@@ -47,5 +48,10 @@ public class MapBuilder : MonoBehaviour
         {
             _floorTilemap.SetTile(tilePosition, _floorTile);
         }
+    }
+
+    public List<Vector2Int> GetFloorPositions()
+    {
+        return _map.GetFloorPositions();
     }
 }
