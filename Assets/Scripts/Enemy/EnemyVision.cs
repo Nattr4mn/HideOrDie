@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
+[RequireComponent(typeof(MeshFilter))]
 public class EnemyVision : MonoBehaviour
 {
     public UnityEvent<Transform> DetectEvent;
@@ -10,7 +11,6 @@ public class EnemyVision : MonoBehaviour
     [SerializeField] private float _fieldOfView = 90f;
     [SerializeField] private float _viewDistance = 2f;
     [SerializeField] private int _rayVisionCount = 50;
-    private Vector3 _origin;
     private float _fieldOfViewAngle;
     private float _angleBetweenRays;
 
@@ -19,39 +19,26 @@ public class EnemyVision : MonoBehaviour
         _fieldOfViewMesh = new Mesh();
         var meshFilter = GetComponent<MeshFilter>();
         meshFilter.mesh = _fieldOfViewMesh;
-        _origin = Vector3.zero;
         _angleBetweenRays = _fieldOfView / _rayVisionCount;
     }
 
-    private void LateUpdate()
+    public void Scan(Vector3 originPoint)
     {
         float currentAngle = _fieldOfViewAngle;
         Vector3[] vertices = new Vector3[_rayVisionCount + 2];
-        Vector2[] uv = new Vector2[vertices.Length];
         int[] triangles = new int[_rayVisionCount * 3];
 
-        vertices[0] = _origin;
+        vertices[0] = Vector3.zero;
 
         int vertexIndex = 1;
         int triangleIndex = 0;
         for (int i = 0; i <= _rayVisionCount; i++)
         {
-            Vector3 vertex;
-            RaycastHit2D detectionHit = Physics2D.Raycast(_origin, _origin + GetVectorFromAngle(currentAngle), _viewDistance, _visionLayerMask);
-            if (detectionHit.collider == null)
-            {
-                vertex = _origin + GetVectorFromAngle(currentAngle) * _viewDistance;
-            }
-            else
-            {
-                vertex = detectionHit.point;
-                if (detectionHit.transform.TryGetComponent(out Player player))
-                {
-                    DetectEvent?.Invoke(detectionHit.transform);
-                }
-                Debug.Log("Detect " + detectionHit.transform.name);
-            }
-            vertices[vertexIndex] = vertex;
+            var direction = transform.TransformDirection(GetVectorFromAngle(currentAngle));
+            RaycastHit2D detectionHit = Physics2D.Raycast(originPoint, direction, _viewDistance, _visionLayerMask);
+
+            CheckDetection(detectionHit);
+            vertices[vertexIndex] = GetVectorFromAngle(currentAngle) * _viewDistance;
 
             if (i > 0)
             {
@@ -66,11 +53,20 @@ public class EnemyVision : MonoBehaviour
             currentAngle -= _angleBetweenRays;
         }
 
-
         _fieldOfViewMesh.vertices = vertices;
-        _fieldOfViewMesh.uv = uv;
         _fieldOfViewMesh.triangles = triangles;
-        _fieldOfViewMesh.bounds = new Bounds(_origin, Vector3.one * _viewDistance);
+        _fieldOfViewMesh.bounds = new Bounds(Vector3.zero, Vector3.one * _viewDistance);
+    }
+
+    private void CheckDetection(RaycastHit2D detectionHit)
+    {
+        if (detectionHit.collider != null)
+        {
+            if (detectionHit.transform.TryGetComponent(out Player player))
+            {
+                DetectEvent?.Invoke(player.transform);
+            }
+        }
     }
 
     public void SetAimDirection(Vector3 aimDirection)
@@ -78,20 +74,10 @@ public class EnemyVision : MonoBehaviour
         _fieldOfViewAngle = GetAngleFromVectorFloat(aimDirection) + _fieldOfView / 2f;
     }
 
-    public void SetOrigin(Vector3 origin)
-    {
-        _origin = origin;
-    }
-
     private Vector3 GetVectorFromAngle(float angle)
     {
         float angleRad = angle * (Mathf.PI / 180f);
-        return new Vector3(Mathf.Sin(angleRad), Mathf.Cos(angleRad));
-    }
-
-    private void OnDrawGizmos()
-    {
-       Gizmos.DrawRay(_origin, transform.up);
+        return new Vector3(Mathf.Cos(angleRad), Mathf.Sin(angleRad));
     }
 
     private float GetAngleFromVectorFloat(Vector3 dir)

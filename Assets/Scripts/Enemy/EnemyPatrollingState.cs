@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemyPatrollingState : EnemyState
+public class EnemyPatrollingState : EnemyMoveState
 {
     private List<Vector2> _patrollingPath;
     private Vector3 _nextPosition;
@@ -16,9 +16,9 @@ public class EnemyPatrollingState : EnemyState
         _nextPosition = startPoint;
     }
 
-    public override Vector3 GetNextPosition(Transform currentPosition)
+    public override Vector3 GetNextPosition(Vector3 currentPosition)
     {
-        if(currentPosition.position == _nextPosition)
+        if(currentPosition == _nextPosition)
         {
             _nextPositionIndex = GetNextPositionIndex(_nextPositionIndex);
             _nextPosition = _patrollingPath[_nextPositionIndex];
@@ -41,6 +41,7 @@ public class EnemyPatrollingState : EnemyState
         {
             _isBack = !_isBack;
         }
+
         return currentIndex;
     }
 }
